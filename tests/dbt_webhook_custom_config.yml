@@ -1,0 +1,32 @@
+command_start_hook: null
+command_end_hook: null
+model_start_hook: null
+model_end_hook:
+  command_types:
+    - "run"
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+  node_types:
+    - "model"
+
+model_hook_on_command_start:
+  command_types:
+    - "run"
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+  node_types:
+    - "model"

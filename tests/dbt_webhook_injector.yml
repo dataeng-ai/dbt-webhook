@@ -1,0 +1,65 @@
+command_start_hook:
+  command_types:
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+
+command_end_hook:
+  command_types:
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+
+model_start_hook:
+  command_types:
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+
+model_end_hook:
+  command_types:
+    - "run"
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+  node_types:
+    - "model"
+
+model_hook_on_command_start:
+  command_types:
+    - "run"
+    - "compile"
+  webhook_url: ""
+  webhok_method: "POST"
+  headers:
+    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  env_vars:
+    - "dbt_webhook_AUTH_TOKEN"
+  inject_meta: []
+  node_types:
+    - "model"

@@ -1,0 +1,8 @@
+model_end_hook:
+  command_types:
+    - "compile"
+  webhook_url: "a/b/c"
+  webhok_method: "POST"
+  headers:
+    Content-Type: "application/json"
+  inject_meta: []
