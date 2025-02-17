@@ -1,3 +1,4 @@
+import datetime
 import os
 import requests
 import sys
@@ -32,7 +33,7 @@ class dbtWebhook(dbtPlugin):
         events.info(events.PluginInit())
         self._config_path = self._get_config_file()
         self._command_type = self._get_command_type()
-        self._run_started_at = tracking.active_user.run_started_at.strftime("%Y-%m-%d %H:%M:%S")
+        self._run_started_at = tracking.active_user.run_started_at.strftime("%Y-%m-%d %H:%M:%S.%f")
         self._invocation_id = get_invocation_id()
         self._config: dbtWebhookConfig | None = None
         super().__init__(project_name)
@@ -57,7 +58,7 @@ class dbtWebhook(dbtPlugin):
 
         webhock_data = {
             "invocation_id": self._invocation_id,
-            "start_time": self._run_started_at,
+            "run_started_at": self._run_started_at,
         }
         
         if cfg.webhok_method == "POST":
@@ -75,10 +76,13 @@ class dbtWebhook(dbtPlugin):
         cfg = self._config.command_end_hook
         url = cfg.webhook_url
 
+        finished_at_dt = datetime.datetime.fromtimestamp(msg.data.completed_at.seconds + msg.data.completed_at.nanos / 1e9)
+        finished_at = finished_at_dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
         webhock_data = {
             "invocation_id": self._invocation_id,
-            "start_time": self._run_started_at,
-            "completed_at_seconds": msg.data.completed_at.seconds,
+            "run_started_at": self._run_started_at,
+            "run_finished_at": finished_at,
             "success": msg.data.success,
         }
 
@@ -105,7 +109,8 @@ class dbtWebhook(dbtPlugin):
             "target_database": msg.data.node_info.node_relation.database,
             "target_schema": msg.data.node_info.node_relation.schema,
             "target_table_name": msg.data.node_info.node_relation.alias,
-            "start_time": msg.data.node_info.node_started_at,
+            "run_started_at": self._run_started_at,
+            "node_started_at": msg.data.node_info.node_started_at,
             "success": msg.data.node_info.node_status == "success",
         }
 
@@ -136,8 +141,9 @@ class dbtWebhook(dbtPlugin):
             "target_database": msg.data.node_info.node_relation.database,
             "target_schema": msg.data.node_info.node_relation.schema,
             "target_table_name": msg.data.node_info.node_relation.alias,
-            "start_time": msg.data.node_info.node_started_at,
-            "end_time": msg.data.node_info.node_started_at,
+            "run_started_at": self._run_started_at,
+            "node_started_at": msg.data.node_info.node_started_at,
+            "node_finished_at": msg.data.node_info.node_finished_at,
             "success": msg.data.node_info.node_status == "success",
         }
 
@@ -166,7 +172,7 @@ class dbtWebhook(dbtPlugin):
 
         webhock_data = {
             "invocation_id": self._invocation_id,
-            "start_time": self._run_started_at,
+            "run_started_at": self._run_started_at,
             "target_database": node.database,
             "target_schema": node.schema,
             "target_table_name": node.alias,

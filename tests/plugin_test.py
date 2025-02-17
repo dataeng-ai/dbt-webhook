@@ -105,7 +105,7 @@ class TestDbtWebhook(unittest.TestCase):
             headers={"Content-Type": "application/json"},
             json={
                 "invocation_id": mock.ANY,
-                "start_time": mock.ANY
+                "run_started_at": mock.ANY
             }
         )
         self.assertTrue(res.success)
@@ -121,8 +121,8 @@ class TestDbtWebhook(unittest.TestCase):
             headers={"Content-Type": "application/json"},
             json={
                 "invocation_id": mock.ANY,
-                "start_time": mock.ANY,
-                "completed_at_seconds": mock.ANY,
+                "run_started_at": mock.ANY,
+                "run_finished_at": mock.ANY,
                 "success": True,
             }
         )
@@ -142,7 +142,8 @@ class TestDbtWebhook(unittest.TestCase):
                 "target_database": mock.ANY,
                 "target_schema": mock.ANY,
                 "target_table_name": "my_first_dbt_model",
-                "start_time": mock.ANY,
+                "run_started_at": mock.ANY,
+                "node_started_at": mock.ANY,
                 "success": mock.ANY,
             }
         )
@@ -162,8 +163,9 @@ class TestDbtWebhook(unittest.TestCase):
                 "target_database": mock.ANY,
                 "target_schema": mock.ANY,
                 "target_table_name": "my_first_dbt_model",
-                "start_time": mock.ANY,
-                "end_time": mock.ANY,
+                "run_started_at": mock.ANY,
+                "node_started_at": mock.ANY,
+                "node_finished_at": mock.ANY,
                 "success": mock.ANY,
             }
         )
@@ -186,7 +188,7 @@ class TestDbtWebhook(unittest.TestCase):
                     "target_database": mock.ANY,
                     "target_schema": mock.ANY,
                     "target_table_name": mock.ANY,
-                    "start_time": mock.ANY,
+                    "run_started_at": mock.ANY,
                 }
             )
         )
