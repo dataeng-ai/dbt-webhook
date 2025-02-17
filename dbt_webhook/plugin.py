@@ -38,10 +38,10 @@ class dbtWebhook(dbtPlugin):
         super().__init__(project_name)
 
     def _get_config_file(self):
-        return os.environ.get("dbt_webhook_CONFIG", DEFAULT_CONIG_FILE_NAME)
+        return os.environ.get("DBT_WEBHOOK_CONFIG", DEFAULT_CONIG_FILE_NAME)
 
     def _get_command_type(self) -> str:
-        cmd_type = os.environ.get("dbt_webhook_COMMAND_TYPE")
+        cmd_type = os.environ.get("DBT_WEBHOOK_COMMAND_TYPE")
         if cmd_type:
             return cmd_type
         if len(sys.argv) > 1:

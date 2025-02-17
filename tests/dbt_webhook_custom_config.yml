@@ -8,10 +8,10 @@ model_end_hook:
   webhook_url: ""
   webhok_method: "POST"
   headers:
-    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Authorization: "bearer {DBT_WEBHOOK_AUTH_TOKEN}"
     Content-Type: "application/json"
   env_vars:
-    - "dbt_webhook_AUTH_TOKEN"
+    - "DBT_WEBHOOK_AUTH_TOKEN"
   inject_meta: []
   node_types:
     - "model"
@@ -23,10 +23,10 @@ model_hook_on_command_start:
   webhook_url: ""
   webhok_method: "POST"
   headers:
-    Authorization: "bearer {dbt_webhook_AUTH_TOKEN}"
+    Authorization: "bearer {DBT_WEBHOOK_AUTH_TOKEN}"
     Content-Type: "application/json"
   env_vars:
-    - "dbt_webhook_AUTH_TOKEN"
+    - "DBT_WEBHOOK_AUTH_TOKEN"
   inject_meta: []
   node_types:
     - "model"

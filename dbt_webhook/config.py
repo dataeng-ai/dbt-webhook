@@ -14,10 +14,10 @@ class baseHookConfig(BaseModel):
     webhook_url: str = ""
     webhok_method: str = "POST"
     headers: dict[str, str] = {
-        "Authorization": "bearer {dbt_webhook_AUTH_TOKEN}",
+        "Authorization": "bearer {DBT_WEBHOOK_AUTH_TOKEN}",
         "Content-Type": "application/json"
     }
-    env_vars: list[str] = ["dbt_webhook_AUTH_TOKEN"]
+    env_vars: list[str] = ["DBT_WEBHOOK_AUTH_TOKEN"]
 
 
 class commandHookConfig(baseHookConfig):
@@ -57,7 +57,8 @@ class dbtWebhookConfig(BaseModel):
             config.command_start_hook,
             config.command_end_hook,
             config.model_start_hook,
-            config.model_end_hook
+            config.model_end_hook,
+            config.model_hook_on_command_start,
         ]:
             success = cls._substitute_env_vars(sub_config)
             if not success:

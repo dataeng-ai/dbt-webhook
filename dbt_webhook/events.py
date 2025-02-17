@@ -42,7 +42,7 @@ class PluginConfigNotFound(BaseMessage):
     def message(self) -> str:
         return (
             "plugin config not found, expected config passed " +
-            "as `dbt_webhook_CONFIG` env variable or `dbt_webhook.yml` "+
+            "as `DBT_WEBHOOK_CONFIG` env variable or `dbt_webhook.yml` "+
             "file located in working directory."
         )
 
@@ -84,7 +84,7 @@ class CommandTypeFetchError(BaseMessage):
     def message(self) -> str:
         return (
             "Error getting dbt command type. If executed programmatically, " +
-            "expected env var `dbt_webhook_COMMAND_TYPE`, otherwise sys.argv[1]."
+            "expected env var `DBT_WEBHOOK_COMMAND_TYPE`, otherwise sys.argv[1]."
         )
 
 class WebHookCallError(BaseMessage):
