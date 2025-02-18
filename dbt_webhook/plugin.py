@@ -14,6 +14,8 @@ from dbt_common.invocation import get_invocation_id
 from dbt_webhook import events
 from dbt_webhook.config import dbtWebhookConfig, modelHookConfig, commandHookConfig
 from google.protobuf.message import Message
+from dbt.flags import get_flags
+
 
 DEFAULT_CONIG_FILE_NAME = "dbt_webhook.yml"
 
@@ -46,10 +48,10 @@ class dbtWebhook(dbtPlugin):
         cmd_type = os.environ.get("DBT_WEBHOOK_COMMAND_TYPE")
         if cmd_type:
             return cmd_type
-        if len(sys.argv) > 1:
-            return sys.argv[1].lower()
-        events.error(events.CommandTypeFetchError())
-        return None
+        try:
+            return get_flags().which
+        except Exception as e:
+            events.error(events.CommandTypeFetchError(e))
 
     def _call_command_start_hook(self):
         if not self._config.command_start_hook or not self._config.command_start_hook.webhook_url:

@@ -81,10 +81,13 @@ class ConfigReadError(BaseMessage):
 
 
 class CommandTypeFetchError(BaseMessage):
+    def __init__(self, err: Exception):
+        self._err = err
+
     def message(self) -> str:
         return (
-            "Error getting dbt command type. If executed programmatically, " +
-            "expected env var `DBT_WEBHOOK_COMMAND_TYPE`, otherwise sys.argv[1]."
+            "Error getting dbt command type. Command type can be passed as env var " +
+            "`DBT_WEBHOOK_COMMAND_TYPE`, or fetched from args. {self._err}."
         )
 
 class WebHookCallError(BaseMessage):
