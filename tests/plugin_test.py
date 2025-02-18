@@ -229,6 +229,19 @@ class TestDbtWebhook(unittest.TestCase):
         )
         self.assertTrue(res.success)
 
+    def test_model_on_cmd_start_inject_meta(self):
+        custom_config = "dbt_webhook_cmd_start_inject_meta.yml"
+        os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"field1": 'val1'}
+        self.post_mock.return_value = mock_response
+        res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
+        os.environ.pop("DBT_WEBHOOK_CONFIG")
+
+        self.assertEqual(res.result.results[0].node.config.meta.get("field1"), "val1")
+        self.assertTrue(res.success)
+
 
 if __name__ == "__main__":
     unittest.main()

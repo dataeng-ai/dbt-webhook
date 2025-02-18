@@ -191,7 +191,7 @@ class dbtWebhook(dbtPlugin):
         if not cfg.inject_meta:
             return
         for meta_key in cfg.inject_meta:
-            node.meta[meta_key] = data.get(meta_key)
+            node.config.meta[meta_key] = data.get(meta_key)
 
     def _message_handler(self, msg: EventMsg) -> None:
         """
