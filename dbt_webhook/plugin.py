@@ -149,7 +149,7 @@ class dbtWebhook(dbtPlugin):
 
         if cfg.inject_meta and msg.data.node_info.meta.fields:
             for meta_key in  cfg.inject_meta:
-                meta_value = msg.data.node_info.meta.fields.get(meta_key)
+                meta_value = msg.data.node_info.meta.fields.get(meta_key).string_value
                 webhock_data[meta_key] = meta_value
         
         if cfg.webhok_method == "POST":
