@@ -53,6 +53,11 @@ class dbtWebhook(dbtPlugin):
     def _call_command_start_hook(self):
         if not self._config.command_start_hook or not self._config.command_start_hook.webhook_url:
             return
+        if (
+            self._config.command_start_hook.command_types and
+            self._command_type not in self._config.command_start_hook.command_types
+        ):
+            return
         cfg = self._config.command_start_hook
         url = cfg.webhook_url
 
@@ -72,6 +77,11 @@ class dbtWebhook(dbtPlugin):
 
     def _call_command_end_hook(self, msg: EventMsg):
         if not self._config.command_end_hook or not self._config.command_end_hook.webhook_url:
+            return
+        if (
+            self._config.command_end_hook.command_types and
+            self._command_type not in self._config.command_end_hook.command_types
+        ):
             return
         cfg = self._config.command_end_hook
         url = cfg.webhook_url
@@ -98,6 +108,11 @@ class dbtWebhook(dbtPlugin):
 
     def _call_model_start_hook(self, msg: EventMsg) -> None:
         if not self._config.model_start_hook or not self._config.model_start_hook.webhook_url:
+            return
+        if (
+            self._config.model_start_hook.command_types and
+            self._command_type not in self._config.model_start_hook.command_types
+        ):
             return
         cfg = self._config.model_start_hook
         url = cfg.webhook_url
@@ -131,6 +146,8 @@ class dbtWebhook(dbtPlugin):
     def _call_model_end_hook(self, msg: EventMsg):
         if not self._config.model_end_hook or not self._config.model_end_hook.webhook_url:
             return
+        if self._config.model_end_hook.command_types and self._command_type not in self._config.model_end_hook.command_types:
+            return
         cfg = self._config.model_end_hook
         url = cfg.webhook_url
         if msg.data.node_info.resource_type != "model":
@@ -163,6 +180,11 @@ class dbtWebhook(dbtPlugin):
 
     def _call_node_hook_on_command_start(self, node: ManifestNode):
         if not self._config.model_hook_on_command_start or not self._config.model_hook_on_command_start.webhook_url:
+            return
+        if (
+            self._config.model_hook_on_command_start.command_types and
+            self._command_type not in self._config.model_hook_on_command_start.command_types
+        ):
             return
         cfg = self._config.model_hook_on_command_start
         url = cfg.webhook_url
