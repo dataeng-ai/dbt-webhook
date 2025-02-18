@@ -25,9 +25,12 @@ class TestDbtWebhook(unittest.TestCase):
         os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = "somesecrettoken"
         self.post_patcher = mock.patch.object(requests, "post", autospec=True)
         self.post_mock = self.post_patcher.start()
+        self.put_patcher = mock.patch.object(requests, "put", autospec=True)
+        self.put_mock = self.put_patcher.start()
     
     def tearDown(self):
         self.post_patcher.stop()
+        self.put_patcher.stop()
 
     def _event_collector(self, msg):
         if msg.info.code == "Z050" and msg.info.msg.startswith(events.MESSAGE_PREFIX):
@@ -240,6 +243,34 @@ class TestDbtWebhook(unittest.TestCase):
         os.environ.pop("DBT_WEBHOOK_CONFIG")
 
         self.assertEqual(res.result.results[0].node.config.meta.get("field1"), "val1")
+        self.assertTrue(res.success)
+
+    def test_model_on_cmd_start_inject_meta_read_end(self):
+        custom_config = "dbt_webhook_cmd_start_inject_meta_read_end.yml"
+        os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
+        mock_response = mock.create_autospec(requests.Response, instance=True)
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"field1": 'val1'}
+        self.post_mock.return_value = mock_response
+        res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
+        os.environ.pop("DBT_WEBHOOK_CONFIG")
+
+        self.assertEqual(res.result.results[0].node.config.meta.get("field1"), "val1")
+        self.put_mock.assert_called_once_with(
+            url="a/b/c",
+            headers={"Content-Type": "application/json"},
+            json={
+                "invocation_id": mock.ANY,
+                "target_database": mock.ANY,
+                "target_schema": mock.ANY,
+                "target_table_name": mock.ANY,
+                "run_started_at": mock.ANY,
+                "node_started_at": mock.ANY,
+                "node_finished_at": mock.ANY,
+                "field1": "val1",
+                "success": True,
+            }
+        )
         self.assertTrue(res.success)
 
 

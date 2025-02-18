@@ -36,6 +36,7 @@ class dbtWebhook(dbtPlugin):
         self._run_started_at = tracking.active_user.run_started_at.strftime("%Y-%m-%d %H:%M:%S.%f")
         self._invocation_id = get_invocation_id()
         self._config: dbtWebhookConfig | None = None
+        self._nodes: dict[str, ManifestNode] = {}
         super().__init__(project_name)
 
     def _get_config_file(self):
@@ -129,9 +130,10 @@ class dbtWebhook(dbtPlugin):
             "success": msg.data.node_info.node_status == "success",
         }
 
-        if cfg.inject_meta and msg.data.node_info.meta.fields:
+        node = self._nodes[msg.data.node_info.unique_id]
+        if cfg.inject_meta and node.config.meta:
             for meta_key in  cfg.inject_meta:
-                meta_value = msg.data.node_info.meta.fields.get(meta_key)
+                meta_value = node.config.meta.get(meta_key)
                 webhock_data[meta_key] = meta_value
         
         if cfg.webhok_method == "POST":
@@ -164,9 +166,10 @@ class dbtWebhook(dbtPlugin):
             "success": msg.data.node_info.node_status == "success",
         }
 
-        if cfg.inject_meta and msg.data.node_info.meta.fields:
+        node = self._nodes[msg.data.node_info.unique_id]
+        if cfg.inject_meta and node.config.meta:
             for meta_key in  cfg.inject_meta:
-                meta_value = msg.data.node_info.meta.fields.get(meta_key).string_value
+                meta_value = node.config.meta.get(meta_key)
                 webhock_data[meta_key] = meta_value
         
         if cfg.webhok_method == "POST":
@@ -253,6 +256,7 @@ class dbtWebhook(dbtPlugin):
             return {}
 
         for node in manifest.nodes.values():
+            self._nodes[node.unique_id] = node
             try:
                 self._call_node_hook_on_command_start(node)
             except Exception as e:
