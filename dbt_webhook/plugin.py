@@ -60,9 +60,9 @@ class dbtWebhook(dbtPlugin):
 
     def _call_hook(self, config: baseHookConfig, data: CommandBase) -> CommandBase:
         if not config or not config.webhook_url:
-            return
+            return None
         if config.command_types and self._command_type not in config.command_types:
-            return
+            return None
 
         template = Template(config.webhook_request_data_template)
         request_data = template.render(data=data.model_dump())
@@ -101,7 +101,9 @@ class dbtWebhook(dbtPlugin):
         self._call_hook(self._config.command_end_hook, self._data)
 
     def _model_start_hook(self, msg: EventMsg) -> None:
-        if not self._config or msg.data.node_info.resource_type not in self._config.model_start_hook.node_types:
+        if not self._config:
+            return
+        if msg.data.node_info.resource_type not in self._config.model_start_hook.node_types:
             return
 
         unique_id = msg.data.node_info.unique_id
@@ -110,7 +112,9 @@ class dbtWebhook(dbtPlugin):
         self._call_hook(self._config.model_start_hook, node)
 
     def _model_end_hook(self, msg: EventMsg):
-        if not self._config or msg.data.node_info.resource_type not in self._config.model_start_hook.node_types:
+        if not self._config:
+            return
+        if msg.data.node_info.resource_type not in self._config.model_end_hook.node_types:
             return
 
         unique_id = msg.data.node_info.unique_id
@@ -118,21 +122,6 @@ class dbtWebhook(dbtPlugin):
         self._data.nodes[unique_id].success = msg.data.node_info.node_status == "success"
         node = self._data.get_webhook_node(unique_id)
         self._call_hook(self._config.model_end_hook, node)
-
-        node = self._nodes[msg.data.node_info.unique_id]
-        if cfg.inject_meta and node.config.meta:
-            for meta_key in  cfg.inject_meta:
-                meta_value = node.config.meta.get(meta_key)
-                webhock_data[meta_key] = meta_value
-        
-        if cfg.webhok_method == "POST":
-            response = requests.post(url=url, headers=cfg.headers, json=webhock_data)
-        elif cfg.webhok_method == "PUT":
-            response = requests.put(url=url, headers=cfg.headers, json=webhock_data)
-        elif cfg.webhok_method == "GET":
-            response = requests.get(url=url, headers=cfg.headers)
-
-        response.raise_for_status()
 
     def _init_node_model(self, node: ManifestNode):
         if node.resource_type != "model":
