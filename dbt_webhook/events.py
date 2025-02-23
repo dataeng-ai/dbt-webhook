@@ -91,8 +91,9 @@ class CommandTypeFetchError(BaseMessage):
         )
 
 class WebHookCallError(BaseMessage):
-    def __init__(self, err: Exception):
+    def __init__(self, webhook_type: str, err: Exception):
         self._err = err
+        self._webhook_type = webhook_type
 
     def message(self) -> str:
-        return f"error calling webhook: {self._err}"
+        return f"error calling webhook {self._webhook_type}: {self._err}"

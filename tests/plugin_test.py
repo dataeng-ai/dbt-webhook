@@ -49,7 +49,7 @@ class TestDbtWebhook(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_config_custom_file(self):
-        custom_config = "dbt_webhook_custom_config.yml"
+        custom_config = "custom_config.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -87,7 +87,7 @@ class TestDbtWebhook(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_invalid_yaml(self):
-        custom_config = "dbt_webhook_invalid_yaml.yml"
+        custom_config = "invalid_yaml.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -98,7 +98,7 @@ class TestDbtWebhook(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_command_start_hook_success(self):
-        custom_config = "dbt_webhook_command_start_hook.yml"
+        custom_config = "command_start_hook.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -107,14 +107,18 @@ class TestDbtWebhook(unittest.TestCase):
             url="a/b/c",
             headers={"Content-Type": "application/json"},
             json={
+                "command_type": "compile",
                 "invocation_id": mock.ANY,
-                "run_started_at": mock.ANY
+                "run_started_at": mock.ANY,
+                "nodes": mock.ANY,
+                "run_finished_at": None,
+                "success": None
             }
         )
         self.assertTrue(res.success)
 
     def test_command_end_hook_success(self):
-        custom_config = "dbt_webhook_command_end_hook.yml"
+        custom_config = "command_end_hook.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -123,16 +127,18 @@ class TestDbtWebhook(unittest.TestCase):
             url="a/b/c",
             headers={"Content-Type": "application/json"},
             json={
+                "command_type": "compile",
                 "invocation_id": mock.ANY,
                 "run_started_at": mock.ANY,
+                "nodes": mock.ANY,
                 "run_finished_at": mock.ANY,
-                "success": True,
+                "success": True
             }
         )
         self.assertTrue(res.success)
 
     def test_model_start_hook_success(self):
-        custom_config = "dbt_webhook_model_start_hook.yml"
+        custom_config = "model_start_hook.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -141,19 +147,27 @@ class TestDbtWebhook(unittest.TestCase):
             url="a/b/c",
             headers={"Content-Type": "application/json"},
             json={
+                "command_type": "compile",
                 "invocation_id": mock.ANY,
-                "target_database": mock.ANY,
-                "target_schema": mock.ANY,
-                "target_table_name": "my_first_dbt_model",
+                "node": {
+                    "meta": mock.ANY,
+                    "target_database": mock.ANY,
+                    "target_schema": mock.ANY,
+                    "target_table_name": "my_first_dbt_model",
+                    "node_started_at": mock.ANY,
+                    "node_finished_at": None,
+                    "success": None,
+                    "unique_id": "model.test_1.my_first_dbt_model"
+                },
                 "run_started_at": mock.ANY,
-                "node_started_at": mock.ANY,
-                "success": mock.ANY,
+                "run_finished_at": None,
+                "success": None,
             }
         )
         self.assertTrue(res.success)
 
     def test_model_end_hook_success(self):
-        custom_config = "dbt_webhook_model_end_hook.yml"
+        custom_config = "model_end_hook.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -162,43 +176,27 @@ class TestDbtWebhook(unittest.TestCase):
             url="a/b/c",
             headers={"Content-Type": "application/json"},
             json={
+                "command_type": "compile",
                 "invocation_id": mock.ANY,
-                "target_database": mock.ANY,
-                "target_schema": mock.ANY,
-                "target_table_name": "my_first_dbt_model",
+                "node": {
+                    "meta": mock.ANY,
+                    "target_database": mock.ANY,
+                    "target_schema": mock.ANY,
+                    "target_table_name": "my_first_dbt_model",
+                    "node_started_at": mock.ANY,
+                    "node_finished_at": mock.ANY,
+                    "success": True,
+                    "unique_id": "model.test_1.my_first_dbt_model"
+                },
                 "run_started_at": mock.ANY,
-                "node_started_at": mock.ANY,
-                "node_finished_at": mock.ANY,
-                "success": mock.ANY,
+                "run_finished_at": None,
+                "success": None,
             }
         )
         self.assertTrue(res.success)
 
-    def test_model_hook_on_command_start_success(self):
-        custom_config = "dbt_webhook_model_hook_on_command_start.yml"
-        os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
-        res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
-        os.environ.pop("DBT_WEBHOOK_CONFIG")
-
-        self.assertEqual(self.post_mock.call_count, 2)
-        self.assertEqual(
-            self.post_mock.call_args_list[0],
-            mock.call(
-                url="a/b/c",
-                headers={"Content-Type": "application/json"},
-                json={
-                    "invocation_id": mock.ANY,
-                    "target_database": mock.ANY,
-                    "target_schema": mock.ANY,
-                    "target_table_name": mock.ANY,
-                    "run_started_at": mock.ANY,
-                }
-            )
-        )
-        self.assertTrue(res.success)
-
-    def test_cmd_start_header_env_var(self):
-        custom_config = "dbt_webhook_cmd_start_header_env_var.yml"
+    def test_command_start_header_env_var(self):
+        custom_config = "command_start_header_env_var.yml"
         bearer = "xyz"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = bearer
@@ -213,8 +211,8 @@ class TestDbtWebhook(unittest.TestCase):
         )
         self.assertTrue(res.success)
 
-    def test_model_on_cmd_start_header_env_var(self):
-        custom_config = "dbt_webhook_model_on_cmd_start_header_env_var.yml"
+    def test_model_start_header_env_var(self):
+        custom_config = "model_start_header_env_var.yml"
         bearer = "xyz"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = bearer
@@ -232,25 +230,24 @@ class TestDbtWebhook(unittest.TestCase):
         )
         self.assertTrue(res.success)
 
-    def test_model_on_cmd_start_inject_meta(self):
-        custom_config = "dbt_webhook_cmd_start_inject_meta.yml"
+    def test_command_start_inject_meta(self):
+        custom_config = "command_start_inject_meta.yml"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
         mock_response = mock.create_autospec(requests.Response, instance=True)
         mock_response.status_code = 200
-        mock_response.json.return_value = {"field1": 'val1'}
-        self.post_mock.return_value = mock_response
-        res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
-        os.environ.pop("DBT_WEBHOOK_CONFIG")
-
-        self.assertEqual(res.result.results[0].node.config.meta.get("field1"), "val1")
-        self.assertTrue(res.success)
-
-    def test_model_on_cmd_start_inject_meta_read_end(self):
-        custom_config = "dbt_webhook_cmd_start_inject_meta_read_end.yml"
-        os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
-        mock_response = mock.create_autospec(requests.Response, instance=True)
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"field1": 'val1'}
+        mock_data_response = {
+            "nodes": {
+                "model.test_1.my_first_dbt_model": {
+                    "meta": {"field1": 'val1'},
+                    "unique_id": "model.test_1.my_first_dbt_model"
+                },
+                "model.test_1.my_second_dbt_model": {
+                    "meta": {"field1": 'val2'},
+                    "unique_id": "model.test_1.my_second_dbt_model"
+                }
+            }
+        }
+        mock_response.json.return_value = mock_data_response
         self.post_mock.return_value = mock_response
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
@@ -260,15 +257,21 @@ class TestDbtWebhook(unittest.TestCase):
             url="a/b/c",
             headers={"Content-Type": "application/json"},
             json={
+                "command_type": "compile",
                 "invocation_id": mock.ANY,
-                "target_database": mock.ANY,
-                "target_schema": mock.ANY,
-                "target_table_name": mock.ANY,
+                "node": {
+                    "unique_id": "model.test_1.my_first_dbt_model",
+                    "meta": {"field1": 'val1'},
+                    "node_started_at": mock.ANY,
+                    "node_finished_at": mock.ANY,
+                    "target_database": "test",
+                    "target_schema": "test",
+                    "target_table_name": "my_first_dbt_model",
+                    "success": True,
+                },
+                "run_finished_at": None,
                 "run_started_at": mock.ANY,
-                "node_started_at": mock.ANY,
-                "node_finished_at": mock.ANY,
-                "field1": "val1",
-                "success": True,
+                "success": None
             }
         )
         self.assertTrue(res.success)

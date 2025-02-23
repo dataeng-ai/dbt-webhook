@@ -3,9 +3,9 @@ import yaml
 
 from dbt_common.events.event_manager_client import get_event_manager
 from dbt_webhook import events
-from pathlib import Path
 from pydantic import BaseModel
-from typing import Optional
+
+WEBHOOK_DATA = "{{ data | tojson }}"
 
 
 class baseHookConfig(BaseModel):
@@ -13,6 +13,7 @@ class baseHookConfig(BaseModel):
     command_types: list[str] = ["run", "build"]
     webhook_url: str = ""
     webhok_method: str = "POST"
+    webhook_request_data_template: str = WEBHOOK_DATA
     headers: dict[str, str] = {
         "Authorization": "bearer {DBT_WEBHOOK_AUTH_TOKEN}",
         "Content-Type": "application/json"
@@ -27,18 +28,16 @@ class commandHookConfig(baseHookConfig):
 
 class modelHookConfig(baseHookConfig):
     """Model level hook config."""
-    inject_meta: list[str] = []
     node_types: list[str] = ["model"]
 
 
 class dbtWebhookConfig(BaseModel):
     """Configuration for dbt webhook."""
 
-    command_start_hook: commandHookConfig | None = None
-    command_end_hook: commandHookConfig | None = None
-    model_start_hook: modelHookConfig | None = None
+    command_start_hook: commandHookConfig | None = commandHookConfig()
+    command_end_hook: commandHookConfig | None = commandHookConfig()
+    model_start_hook: modelHookConfig | None = modelHookConfig()
     model_end_hook: modelHookConfig | None = modelHookConfig()
-    model_hook_on_command_start: modelHookConfig | None = modelHookConfig()
 
     @classmethod
     def from_yaml(cls, config_path: str) -> "dbtWebhookConfig":
@@ -58,7 +57,6 @@ class dbtWebhookConfig(BaseModel):
             config.command_end_hook,
             config.model_start_hook,
             config.model_end_hook,
-            config.model_hook_on_command_start,
         ]:
             success = cls._substitute_env_vars(sub_config)
             if not success:
