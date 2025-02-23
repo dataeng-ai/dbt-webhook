@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dbt-webhook"
-version = "0.2.1"
+version = "0.2.2"
 requires-python = ">= 3.9"
 dependencies = [
     "dbt-core>=1.7.0",
@@ -13,6 +13,6 @@ dependencies = [
 authors = [
     {name = "DataEng AI", email = "dataeng.ai@gmail.com"}
 ]
-description = "DBT plugin which allows define http hooks for dbt job and/or model execution start/end and inject data returned from hook to model meta."
+description = "A DBT plugin that allows defining HTTP hooks for DBT commands and/or models, triggering them at execution start/end, and injecting the returned data into the model's metadata."
 readme = "README.md"
 license = {text = ""}
