@@ -1,4 +1,5 @@
-import os
+import traceback
+
 from dbt_common.events.base_types import EventLevel
 from dbt_common.events.event_manager_client import get_event_manager
 from dbt_common.events.types import Note
@@ -105,3 +106,12 @@ class ServiceAccountIdentityToken(BaseMessage):
 
     def message(self) -> str:
         return f"generated identity token for: {self._sa_email}"
+
+
+class PluginUnanhandledError(BaseMessage):
+    def __init__(self, err: Exception):
+        self._err = err
+
+    def message(self) -> str:
+        traceback.print_exc()
+        return f"unanhandled error: {self._err}"

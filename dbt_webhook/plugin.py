@@ -195,11 +195,14 @@ class dbtWebhook(dbtPlugin):
 
     @dbt_hook
     def get_manifest_artifacts(self, manifest: Manifest) -> PluginArtifacts:
-        if not self._config:
-            return {}
-        for node in manifest.nodes.values():
-            self._init_node_model(node)
+        try:
+            if not self._config:
+                return {}
+            for node in manifest.nodes.values():
+                self._init_node_model(node)
 
-        self._command_start_hook()
+            self._command_start_hook()
+        except Exception as e:
+            events.error(events.PluginUnanhandledError(e))
 
         return {}
