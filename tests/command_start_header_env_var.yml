@@ -6,5 +6,8 @@ command_start_hook:
   headers:
     Authorization: "Bearer {DBT_WEBHOOK_AUTH_TOKEN}"
     Content-Type: "application/json"
+    SomeOtherHeader: "{STATIC_ENV_VAR}"
   env_vars:
-    - "DBT_WEBHOOK_AUTH_TOKEN"
+    - "STATIC_ENV_VAR"
+  dynamic_env_var_values:
+    DBT_WEBHOOK_AUTH_TOKEN: "GCP_IDENTITY_TOKEN"

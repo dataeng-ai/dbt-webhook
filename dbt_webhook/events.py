@@ -97,3 +97,11 @@ class WebHookCallError(BaseMessage):
 
     def message(self) -> str:
         return f"error calling webhook {self._webhook_type}: {self._err}"
+
+
+class ServiceAccountIdentityToken(BaseMessage):
+    def __init__(self, sa_email: str):
+        self._sa_email = sa_email
+
+    def message(self) -> str:
+        return f"generated identity token for: {self._sa_email}"

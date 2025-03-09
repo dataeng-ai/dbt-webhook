@@ -12,8 +12,9 @@ from dbt_common.events.base_types import EventMsg
 from dbt_common.events.event_manager_client import get_event_manager
 from dbt_common.invocation import get_invocation_id
 from dbt_webhook import events
-from dbt_webhook.webhook_model import WebhookCommand, WebhookNode, CommandBase, Node
-from dbt_webhook.config import dbtWebhookConfig, baseHookConfig
+from dbt_webhook.webhook_model import WebhookCommand, CommandBase, Node
+from dbt_webhook.config import dbtWebhookConfig, baseHookConfig, DynamicVarType
+from dbt_webhook.dynamic_vars.gcp_id_token import GcpIdentityToken
 from dbt.flags import get_flags
 from jinja2 import Template
 
@@ -64,16 +65,17 @@ class dbtWebhook(dbtPlugin):
         if config.command_types and self._command_type not in config.command_types:
             return None
 
+        headers = self._get_headers(config)
         template = Template(config.webhook_request_data_template)
         request_data = template.render(data=data.model_dump())
         request_data_json = json.loads(request_data)
 
         if config.webhok_method == "POST":
-            response = requests.post(url=config.webhook_url, headers=config.headers, json=request_data_json)
+            response = requests.post(url=config.webhook_url, headers=headers, json=request_data_json)
         elif config.webhok_method == "PUT":
-            response = requests.put(url=config.webhook_url, headers=config.headers, json=request_data_json)
+            response = requests.put(url=config.webhook_url, headers=headers, json=request_data_json)
         elif config.webhok_method == "GET":
-            response = requests.get(url=config.webhook_url, headers=config.headers)
+            response = requests.get(url=config.webhook_url, headers=headers)
 
         response_data = response.json()
         response.raise_for_status()
@@ -99,6 +101,30 @@ class dbtWebhook(dbtPlugin):
         self._data.success = msg.data.success
 
         self._call_hook(self._config.command_end_hook, self._data)
+
+    def _get_headers(self, node_config: baseHookConfig) -> dict[str, str]:
+        if not node_config or not node_config.headers:
+            return {}
+
+        env_var_values = {}
+        for var_name, var_type in node_config.dynamic_env_var_values.items():
+            if var_type == DynamicVarType.GCP_IDENTITY_TOKEN:
+                env_var_values[var_name] = GcpIdentityToken().get_value(node_config)
+        for var_name in node_config.env_vars:
+            if var_name not in os.environ:
+                events.warn(events.EnvVariableValueNotPassed(var_name))
+            env_var_values[var_name] = os.getenv(var_name, "")
+
+        headers_ext = {}
+        for header_name, header_value in node_config.headers.items():
+            try:
+                rendered_header_value = header_value.format(**env_var_values)
+            except Exception as ex:
+                events.error(events.HeaderValueRenderingError(header_name, header_value))
+                return {}
+            headers_ext[header_name] = rendered_header_value
+
+        return headers_ext
 
     def _model_start_hook(self, msg: EventMsg) -> None:
         if not self._config:

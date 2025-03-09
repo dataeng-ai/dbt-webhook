@@ -20,7 +20,7 @@ class TestDbtWebhook(unittest.TestCase):
         package_path = os.path.abspath("..")
         sys.path.append(package_path)
         self.dbt = dbtRunner(callbacks=[self._event_collector])
-        self.cli_args = ['compile', '--no-send-anonymous-usage-stats', '--select', 'my_first_dbt_model', '--project-dir', "test_1"]
+        self.cli_args = ['compile', '--no-send-anonymous-usage-stats', '--select', 'my_first_dbt_model', '--project-dir', "test_1", '--profiles-dir', '.']
         os.environ["DBT_WEBHOOK_COMMAND_TYPE"] = self.cli_args[0]
         os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = "somesecrettoken"
         self.post_patcher = mock.patch.object(requests, "post", autospec=True)
@@ -198,15 +198,20 @@ class TestDbtWebhook(unittest.TestCase):
     def test_command_start_header_env_var(self):
         custom_config = "command_start_header_env_var.yml"
         bearer = "xyz"
+        static_var = "qwe"
         os.environ["DBT_WEBHOOK_CONFIG"] = custom_config
-        os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = bearer
+        os.environ["STATIC_ENV_VAR"] = static_var
         res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
         os.environ.pop("DBT_WEBHOOK_CONFIG")
-        os.environ.pop("DBT_WEBHOOK_AUTH_TOKEN")
+        os.environ.pop("STATIC_ENV_VAR")
 
         self.post_mock.assert_called_once_with(
             url="a/b/c",
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {bearer}"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": mock.ANY,
+                "SomeOtherHeader": static_var
+            },
             json=mock.ANY
         )
         self.assertTrue(res.success)

@@ -3,9 +3,14 @@ import yaml
 
 from dbt_common.events.event_manager_client import get_event_manager
 from dbt_webhook import events
+from enum import Enum
 from pydantic import BaseModel
 
 WEBHOOK_DATA = "{{ data | tojson }}"
+
+
+class DynamicVarType(Enum):
+    GCP_IDENTITY_TOKEN = "GCP_IDENTITY_TOKEN"
 
 
 class baseHookConfig(BaseModel):
@@ -18,7 +23,10 @@ class baseHookConfig(BaseModel):
         "Authorization": "bearer {DBT_WEBHOOK_AUTH_TOKEN}",
         "Content-Type": "application/json"
     }
+    # expected that these environment variables passed outside
     env_vars: list[str] = ["DBT_WEBHOOK_AUTH_TOKEN"]
+    # these are run-time calculated values, key is environment variable name, value is how to calculate it
+    dynamic_env_var_values: dict[str, DynamicVarType] = {}
 
 
 class commandHookConfig(baseHookConfig):
@@ -58,28 +66,30 @@ class dbtWebhookConfig(BaseModel):
             config.model_start_hook,
             config.model_end_hook,
         ]:
-            success = cls._substitute_env_vars(sub_config)
+            success = cls._validate_env_vars(sub_config)
             if not success:
                 return None
+
         return config
 
     @classmethod
-    def _substitute_env_vars(cls, node_config: baseHookConfig) -> bool:
+    def _validate_env_vars(cls, node_config: baseHookConfig) -> bool:
         success = True
-        if not node_config or not node_config.env_vars or not node_config.headers:
+        if not node_config or not node_config.headers:
             return success
-        headers_ext = {}
         env_var_values = {}
+        for var_name in node_config.dynamic_env_var_values:
+            env_var_values[var_name] = ""
         for env_var in node_config.env_vars:
+            env_var_values[env_var] = ""
             if env_var not in os.environ:
                 events.warn(events.EnvVariableValueNotPassed(env_var))
-            env_var_values[env_var] = os.getenv(env_var, "")
+                success = False
+            
         for header_name, header_value in node_config.headers.items():
             try:
-                rendered_header_value = header_value.format(**env_var_values)
+                header_value.format(**env_var_values)
             except Exception as ex:
                 events.error(events.HeaderValueRenderingError(header_name, header_value))
                 success = False
-            headers_ext[header_name] = rendered_header_value
-        node_config.headers = headers_ext
         return success

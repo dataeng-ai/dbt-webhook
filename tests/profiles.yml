@@ -1,0 +1,8 @@
+test_1:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: test
+      dataset: test
