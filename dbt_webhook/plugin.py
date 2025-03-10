@@ -70,6 +70,7 @@ class dbtWebhook(dbtPlugin):
         request_data = template.render(data=data.model_dump())
         request_data_json = json.loads(request_data)
 
+        events.debug(events.HttpRequest(config.webhook_url))
         if config.webhok_method == "POST":
             response = requests.post(url=config.webhook_url, headers=headers, json=request_data_json)
         elif config.webhok_method == "PUT":
@@ -77,12 +78,12 @@ class dbtWebhook(dbtPlugin):
         elif config.webhok_method == "GET":
             response = requests.get(url=config.webhook_url, headers=headers)
 
-        response_data = response.json()
         response.raise_for_status()
+        response_data = response.json()
         return data.__class__(**response_data)
 
     def _command_start_hook(self):
-        if not self._config:
+        if not self._config or not self._config.command_start_hook:
             return
         response: WebhookCommand = self._call_hook(self._config.command_start_hook, self._data)
         if not response:
@@ -93,7 +94,7 @@ class dbtWebhook(dbtPlugin):
                 self._data.nodes[node.unique_id].meta[meta_key] = meta_value
 
     def _command_end_hook(self, msg: EventMsg):
-        if not self._config:
+        if not self._config or not self._config.command_end_hook:
             return
         finished_at_dt = datetime.datetime.fromtimestamp(msg.data.completed_at.seconds + msg.data.completed_at.nanos / 1e9)
         finished_at = finished_at_dt.strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -127,7 +128,7 @@ class dbtWebhook(dbtPlugin):
         return headers_ext
 
     def _model_start_hook(self, msg: EventMsg) -> None:
-        if not self._config:
+        if not self._config or not self._config.model_start_hook:
             return
         if msg.data.node_info.resource_type not in self._config.model_start_hook.node_types:
             return
@@ -138,7 +139,7 @@ class dbtWebhook(dbtPlugin):
         self._call_hook(self._config.model_start_hook, node)
 
     def _model_end_hook(self, msg: EventMsg):
-        if not self._config:
+        if not self._config or not self._config.model_end_hook:
             return
         if msg.data.node_info.resource_type not in self._config.model_end_hook.node_types:
             return

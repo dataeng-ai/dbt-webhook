@@ -20,11 +20,10 @@ class baseHookConfig(BaseModel):
     webhok_method: str = "POST"
     webhook_request_data_template: str = WEBHOOK_DATA
     headers: dict[str, str] = {
-        "Authorization": "bearer {DBT_WEBHOOK_AUTH_TOKEN}",
-        "Content-Type": "application/json"
+        "Authorization": "bearer {DBT_WEBHOOK_AUTH_TOKEN}"
     }
     # expected that these environment variables passed outside
-    env_vars: list[str] = ["DBT_WEBHOOK_AUTH_TOKEN"]
+    env_vars: list[str] = []
     # these are run-time calculated values, key is environment variable name, value is how to calculate it
     dynamic_env_var_values: dict[str, DynamicVarType] = {}
 
@@ -42,10 +41,10 @@ class modelHookConfig(baseHookConfig):
 class dbtWebhookConfig(BaseModel):
     """Configuration for dbt webhook."""
 
-    command_start_hook: commandHookConfig | None = commandHookConfig()
-    command_end_hook: commandHookConfig | None = commandHookConfig()
-    model_start_hook: modelHookConfig | None = modelHookConfig()
-    model_end_hook: modelHookConfig | None = modelHookConfig()
+    command_start_hook: commandHookConfig | None = None
+    command_end_hook: commandHookConfig | None = None
+    model_start_hook: modelHookConfig | None = None
+    model_end_hook: modelHookConfig | None = None
 
     @classmethod
     def from_yaml(cls, config_path: str) -> "dbtWebhookConfig":

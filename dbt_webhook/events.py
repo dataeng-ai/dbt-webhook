@@ -115,3 +115,11 @@ class PluginUnanhandledError(BaseMessage):
     def message(self) -> str:
         traceback.print_exc()
         return f"unanhandled error: {self._err}"
+
+
+class HttpRequest(BaseMessage):
+    def __init__(self, url: str):
+        self._url = url
+
+    def message(self) -> str:
+        return f"call http: {self._url}"

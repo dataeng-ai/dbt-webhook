@@ -1,0 +1,14 @@
+command_start_hook:
+  command_types:
+    - run
+    - build
+    - compile
+  webhook_url: "${WEBHOOK_URL}"
+  webhok_method: "POST"
+  headers:
+    Authorization: "Bearer {DBT_WEBHOOK_AUTH_TOKEN}"
+    Content-Type: "application/json"
+  dynamic_env_var_values:
+    DBT_WEBHOOK_AUTH_TOKEN: "GCP_IDENTITY_TOKEN"
+  node_types:
+    - model

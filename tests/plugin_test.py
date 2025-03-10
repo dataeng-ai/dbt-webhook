@@ -1,8 +1,8 @@
-import dbt_webhook
 import os
-import pkgutil
 import requests
+import string
 import sys
+import tempfile
 import unittest
 import warnings
 
@@ -279,6 +279,28 @@ class TestDbtWebhook(unittest.TestCase):
                 "success": None
             }
         )
+        self.assertTrue(res.success)
+
+    def test_command_start_cf_call(self):
+        custom_config = "command_start_cf_call.yml"
+        self.post_patcher.stop()
+        token = os.environ["DBT_WEBHOOK_AUTH_TOKEN"]
+        os.environ.pop("DBT_WEBHOOK_AUTH_TOKEN")
+        with tempfile.NamedTemporaryFile(mode='wt', delete=True) as temp:
+            with open(custom_config, 'rt') as f:
+                data = f.read()
+                template = string.Template(data)
+                cfg_with_endpoint = template.substitute(WEBHOOK_URL=os.environ["WEBHOOK_URL"])
+                temp.write(cfg_with_endpoint)
+                temp.flush()
+                os.environ["DBT_WEBHOOK_CONFIG"] = temp.name
+
+                res: dbtRunnerResult = self.dbt.invoke(self.cli_args)
+
+        os.environ.pop("DBT_WEBHOOK_CONFIG")
+        os.environ["DBT_WEBHOOK_AUTH_TOKEN"] = token
+        self.post_mock = self.post_patcher.start()
+
         self.assertTrue(res.success)
 
 
