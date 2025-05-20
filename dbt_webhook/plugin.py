@@ -143,7 +143,7 @@ class dbtWebhook(dbtPlugin):
             return
         if msg.data.node_info.resource_type not in self._config.model_end_hook.node_types:
             return
-        if self._config.command_types and self._command_type not in self._config.model_end_hook.command_types:
+        if self._config.model_end_hook.command_types and self._command_type not in self._config.model_end_hook.command_types:
             return
 
         unique_id = msg.data.node_info.unique_id
